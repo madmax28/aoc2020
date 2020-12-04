@@ -66,7 +66,7 @@ impl Passport {
                 return false;
             }
 
-            if !chars.all(|c| matches!(c, '0'..='9' | 'a'..='f')) {
+            if !chars.all(|c| c.is_ascii_hexdigit()) {
                 return false;
             }
         }
