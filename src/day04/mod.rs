@@ -29,12 +29,8 @@ impl Passport {
     }
 
     fn is_valid_p2(&self) -> bool {
-        let in_range = |v: &str, min, max| {
-            matches!(
-                v.parse::<i32>().map(|i| i >= min && i <= max),
-                Ok(true)
-            )
-        };
+        let in_range =
+            |v: &str, min, max| matches!(v.parse::<i32>().map(|i| i >= min && i <= max), Ok(true));
 
         if !in_range(&self.byr, 1920, 2002) {
             return false;
@@ -96,31 +92,28 @@ impl FromStr for Collection {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut ps = Vec::new();
         let mut p = Passport::default();
-        for token in s.split(|c: char| c.is_whitespace()) {
-            if token == "" {
-                ps.push(p);
-                p = Passport::default();
-                continue;
-            }
+        for entry in s.split("\n\n") {
+            for t in entry.split_whitespace() {
+                let kv = t.split(':').collect::<Vec<_>>();
+                if kv.len() != 2 {
+                    return Err(crate::Error::boxed(Error::InvalidInput));
+                }
 
-            let kv = token.split(':').collect::<Vec<_>>();
-            if kv.len() != 2 {
-                return Err(crate::Error::boxed(Error::InvalidInput));
+                match (kv[0], kv[1]) {
+                    ("byr", v) => p.byr = v.to_string(),
+                    ("iyr", v) => p.iyr = v.to_string(),
+                    ("eyr", v) => p.eyr = v.to_string(),
+                    ("hgt", v) => p.hgt = v.to_string(),
+                    ("hcl", v) => p.hcl = v.to_string(),
+                    ("ecl", v) => p.ecl = v.to_string(),
+                    ("pid", v) => p.pid = v.to_string(),
+                    ("cid", v) => p.cid = v.to_string(),
+                    _ => return Err(crate::Error::boxed(Error::InvalidInput)),
+                }
             }
-
-            match (kv[0], kv[1]) {
-                ("byr", v) => p.byr = v.to_string(),
-                ("iyr", v) => p.iyr = v.to_string(),
-                ("eyr", v) => p.eyr = v.to_string(),
-                ("hgt", v) => p.hgt = v.to_string(),
-                ("hcl", v) => p.hcl = v.to_string(),
-                ("ecl", v) => p.ecl = v.to_string(),
-                ("pid", v) => p.pid = v.to_string(),
-                ("cid", v) => p.cid = v.to_string(),
-                _ => return Err(crate::Error::boxed(Error::InvalidInput)),
-            }
+            ps.push(p);
+            p = Passport::default();
         }
-        ps.push(p);
         Ok(Collection(ps))
     }
 }
