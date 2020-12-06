@@ -27,7 +27,7 @@ pub fn part1(input: &str) -> crate::Result<i32> {
 
 pub fn part2(input: &str) -> crate::Result<i32> {
     let mut ids = parse_ids(input)?;
-    ids.sort();
+    ids.sort_unstable();
 
     let id = ids
         .windows(2)
