@@ -244,13 +244,13 @@ mod tests {
     #[test]
     fn day10p1() {
         let inp = include_str!("../input/day10");
-        assert_eq!(crate::day10::part1(inp.trim()).unwrap(), 41682220);
+        assert_eq!(crate::day10::part1(inp.trim()).unwrap(), 2100);
     }
 
     #[test]
     fn day10p2() {
         let inp = include_str!("../input/day10");
-        assert_eq!(crate::day10::part2(inp.trim()).unwrap(), 5388976);
+        assert_eq!(crate::day10::part2(inp.trim()).unwrap(), 16198260678656);
     }
 }
 
