@@ -70,26 +70,30 @@ fn matches<'a>(
     message: &[char],
     idx: usize,
     cur: &mut Vec<&'a Rule>,
-) -> bool {
+) -> crate::Result<bool> {
     if idx == message.len() {
-        return cur.is_empty();
+        return Ok(cur.is_empty());
     }
 
     match cur.pop() {
-        Some(Rule::Letter(c)) => *c == message[idx] && matches(rules, message, idx + 1, cur),
+        Some(Rule::Letter(c)) => Ok(*c == message[idx] && matches(rules, message, idx + 1, cur)?),
         Some(Rule::Refs(refs)) => {
             for opt in refs {
                 let mut c = cur.clone();
                 for r in opt.iter().rev() {
-                    c.push(rules.get(&r).unwrap());
+                    c.push(
+                        rules
+                            .get(&r)
+                            .ok_or_else(|| crate::Error::boxed(Error::InvalidInput))?,
+                    );
                 }
-                if matches(rules, message, idx, &mut c) {
-                    return true;
+                if matches(rules, message, idx, &mut c)? {
+                    return Ok(true);
                 }
             }
-            false
+            Ok(false)
         }
-        None => false,
+        None => Ok(false),
     }
 }
 
@@ -99,7 +103,14 @@ pub fn part1(input: &str) -> crate::Result<i32> {
     let mut cnt = 0;
     for m in messages {
         let chars: Vec<_> = m.chars().collect();
-        if matches(&rules, &chars, 0, &mut vec![rules.get(&0).unwrap()]) {
+        if matches(
+            &rules,
+            &chars,
+            0,
+            &mut vec![rules
+                .get(&0)
+                .ok_or_else(|| crate::Error::boxed(Error::InvalidInput))?],
+        )? {
             cnt += 1;
         }
     }
@@ -115,7 +126,14 @@ pub fn part2(input: &str) -> crate::Result<i32> {
     let mut cnt = 0;
     for m in messages {
         let chars: Vec<_> = m.chars().collect();
-        if matches(&rules, &chars, 0, &mut vec![rules.get(&0).unwrap()]) {
+        if matches(
+            &rules,
+            &chars,
+            0,
+            &mut vec![rules
+                .get(&0)
+                .ok_or_else(|| crate::Error::boxed(Error::InvalidInput))?],
+        )? {
             cnt += 1;
         }
     }
