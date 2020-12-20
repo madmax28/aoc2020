@@ -123,3 +123,15 @@ pub fn part2(input: &str) -> crate::Result<i32> {
     }
     Ok(grid.map.len() as i32)
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn ex1() {
+        let inp = ".#.
+..#
+###";
+        assert_eq!(super::part1(inp).unwrap(), 112);
+        assert_eq!(super::part2(inp).unwrap(), 848);
+    }
+}
