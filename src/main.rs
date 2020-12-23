@@ -20,8 +20,9 @@ mod day19;
 mod day20;
 mod day21;
 mod day22;
+mod day23;
 
-use std::{env, error, fmt, fs, result};
+use std::{env, error, fmt, fs, result, time};
 
 #[derive(Debug)]
 struct UsageError;
@@ -51,10 +52,7 @@ impl<T: fmt::Debug> error::Error for Error<T> {
     }
 }
 
-fn time<F: Fn(A) -> B, A, B>(f: F, a: A) -> B {
-    let now = std::time::Instant::now();
-    let res = f(a);
-    let d = now.elapsed();
+fn print_time(d: time::Duration) {
     println!(
         "> {}.{:03} {:03} {:03} seconds",
         d.as_secs(),
@@ -62,6 +60,13 @@ fn time<F: Fn(A) -> B, A, B>(f: F, a: A) -> B {
         d.subsec_micros() % 1_000,
         d.subsec_nanos() % 1_000,
     );
+}
+
+fn time<F: Fn(A) -> B, A, B>(f: F, a: A) -> B {
+    let now = time::Instant::now();
+    let res = f(a);
+    let d = now.elapsed();
+    print_time(d);
     res
 }
 
@@ -184,6 +189,10 @@ fn main() -> Result<()> {
         22 => {
             println!("Part 1: {}", time(day22::part1, input.trim())?);
             println!("Part 2: {}", time(day22::part2, input.trim())?);
+        }
+        23 => {
+            println!("Part 1: {}", time(day23::part1, input.trim())?);
+            println!("Part 2: {}", time(day23::part2, input.trim())?);
         }
         _ => unimplemented!(),
     }
@@ -442,7 +451,10 @@ mod tests {
     #[test]
     fn day21p2() {
         let inp = include_str!("../input/day21");
-        assert_eq!(&crate::day21::part2(inp.trim()).unwrap(), "zfcqk,mdtvbb,ggdbl,frpvd,mgczn,zsfzq,kdqls,kktsjbh");
+        assert_eq!(
+            &crate::day21::part2(inp.trim()).unwrap(),
+            "zfcqk,mdtvbb,ggdbl,frpvd,mgczn,zsfzq,kdqls,kktsjbh"
+        );
     }
 
     #[test]
@@ -455,6 +467,18 @@ mod tests {
     fn day22p2() {
         let inp = include_str!("../input/day22");
         assert_eq!(crate::day22::part2(inp.trim()).unwrap(), 34031);
+    }
+
+    #[test]
+    fn day23p1() {
+        let inp = include_str!("../input/day23");
+        assert_eq!(&crate::day23::part1(inp.trim()).unwrap(), "27956483");
+    }
+
+    #[test]
+    fn day23p2() {
+        let inp = include_str!("../input/day23");
+        assert_eq!(crate::day23::part2(inp.trim()).unwrap(), 18930983775);
     }
 }
 
