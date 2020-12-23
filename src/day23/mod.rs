@@ -1,4 +1,6 @@
+use std::collections::HashMap;
 use std::fmt;
+use std::hash::Hash;
 use std::str::FromStr;
 
 #[derive(Debug)]
@@ -18,44 +20,19 @@ impl Node {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-enum SearchDir {
-    Left,
-    Right,
-}
-
-impl SearchDir {
-    fn flip(&mut self) {
-        *self = match self {
-            SearchDir::Right => SearchDir::Left,
-            SearchDir::Left => SearchDir::Right,
-        }
-    }
-}
-
 #[derive(Debug)]
 struct CircularList<T> {
     nodes: Vec<Node>,
     storage: Vec<T>,
+    idx_map: HashMap<T, usize>,
 }
 
 impl<T> CircularList<T>
 where
-    T: fmt::Debug + PartialEq,
+    T: fmt::Debug + PartialEq + Eq + Hash,
 {
-    fn find_idx(&self, v: &T, start: usize, dir: SearchDir) -> (usize, usize) {
-        let mut idx = start;
-
-        let mut cnt = 0;
-        while &self.storage[idx] != v {
-            cnt += 1;
-            match dir {
-                SearchDir::Left => idx = (idx + self.storage.len() - 1) % self.storage.len(),
-                SearchDir::Right => idx = (idx + 1) % self.storage.len(),
-            }
-        }
-
-        (idx, cnt)
+    fn find_idx(&self, v: &T) -> usize {
+        *self.idx_map.get(v).unwrap()
     }
 
     fn right(&self, idx: usize) -> usize {
@@ -86,10 +63,19 @@ where
     }
 }
 
-impl<T> From<Vec<T>> for CircularList<T> {
+impl<T> From<Vec<T>> for CircularList<T>
+where
+    T: Clone + PartialEq + Eq + Hash,
+{
     fn from(values: Vec<T>) -> Self {
         assert!(!values.is_empty());
 
+        let idx_map = values
+            .iter()
+            .cloned()
+            .enumerate()
+            .map(|(i, v)| (v, i))
+            .collect();
         let mut nodes: Vec<Node> = Vec::new();
         for idx in 0..values.len() {
             let left = (idx + values.len() - 1) % values.len();
@@ -102,6 +88,7 @@ impl<T> From<Vec<T>> for CircularList<T> {
         CircularList {
             nodes,
             storage: values,
+            idx_map,
         }
     }
 }
@@ -111,7 +98,6 @@ struct Game {
     nums: CircularList<i32>,
     len: usize,
     cur_idx: usize,
-    search_dir: SearchDir,
 }
 
 impl Game {
@@ -124,7 +110,6 @@ impl Game {
                 nums: nums.into(),
                 len,
                 cur_idx: 0,
-                search_dir: SearchDir::Right,
             })
         }
     }
@@ -154,11 +139,8 @@ impl Game {
         };
 
         let mut dst_idx = {
-            let (mut dst_idx, hint) = self.nums.find_idx(&dst, self.cur_idx, self.search_dir);
+            let mut dst_idx = self.nums.find_idx(&dst);
             dst_idx = self.nums.right(dst_idx);
-            if hint > self.len / 2 {
-                self.search_dir.flip();
-            }
             dst_idx
         };
 
@@ -173,7 +155,7 @@ impl Game {
 
     fn calc_p1(&self) -> String {
         let mut res = String::new();
-        let (mut idx, _) = self.nums.find_idx(&1, 0, SearchDir::Right);
+        let mut idx = self.nums.find_idx(&1);
 
         idx = self.nums.right(idx);
         for _ in 0..self.len - 1 {
@@ -185,7 +167,7 @@ impl Game {
     }
 
     fn calc_p2(&self) -> i64 {
-        let (mut idx, _) = self.nums.find_idx(&1, 0, SearchDir::Right);
+        let mut idx = self.nums.find_idx(&1);
 
         idx = self.nums.right(idx);
         let n1 = *self.nums.get(idx);
