@@ -52,25 +52,23 @@ fn parse(s: &str) -> Vec<Vec<Dir>> {
                 'n' => store = Some('n'),
                 's' => store = Some('s'),
                 'e' => {
-                    if let Some(c) = store {
+                    if let Some(c) = store.take() {
                         match c {
                             'n' => dirs.push(Dir::NorthEast),
                             's' => dirs.push(Dir::SouthEast),
                             _ => panic!(),
                         }
-                        store = None;
                     } else {
                         dirs.push(Dir::East);
                     }
                 }
                 'w' => {
-                    if let Some(c) = store {
+                    if let Some(c) = store.take() {
                         match c {
                             'n' => dirs.push(Dir::NorthWest),
                             's' => dirs.push(Dir::SouthWest),
                             _ => panic!(),
                         }
-                        store = None;
                     } else {
                         dirs.push(Dir::West);
                     }
@@ -93,9 +91,7 @@ pub fn part1(input: &str) -> crate::Result<i32> {
             p = d.apply(p);
         }
 
-        if colors.get(&p).is_some() {
-            colors.remove(&p);
-        } else {
+        if colors.remove(&p).is_none() {
             colors.insert(p, Color::Black);
         }
     }
@@ -113,9 +109,7 @@ pub fn part2(input: &str) -> crate::Result<i32> {
             p = d.apply(p);
         }
 
-        if colors.get(&p).is_some() {
-            colors.remove(&p);
-        } else {
+        if colors.remove(&p).is_none() {
             colors.insert(p, Color::Black);
         }
     }
@@ -130,16 +124,10 @@ pub fn part2(input: &str) -> crate::Result<i32> {
 
         for p in to_check {
             let color = *colors.get(&p).unwrap_or(&Color::White);
-            let black_cnt = neighbors(p)
-                .map(|p| colors.get(&p).unwrap_or(&Color::White))
-                .filter(|c| **c == Color::Black)
-                .count();
+            let black_cnt = neighbors(p).filter(|p| colors.contains_key(&p)).count();
 
             match (color, black_cnt) {
-                (Color::White, 2) => {
-                    next.insert(p, Color::Black);
-                }
-                (Color::Black, 1..=2) => {
+                (Color::White, 2) | (Color::Black, 1..=2) => {
                     next.insert(p, Color::Black);
                 }
                 _ => (),
